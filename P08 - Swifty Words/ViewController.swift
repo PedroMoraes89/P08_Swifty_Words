@@ -15,6 +15,12 @@ class ViewController: UIViewController {
     var scoreLabel: UILabel!
     var letterButtons = [UIButton]()
     
+    var activatedButtons = [UIButton]()
+    var solutions = [String]()
+    
+    var score = 0
+    var level = 1
+    
     let submit = UIButton(type: .system)
     let clear = UIButton(type: .system)
     let buttonsView = UIView()
@@ -38,19 +44,19 @@ class ViewController: UIViewController {
         cluesLabel.translatesAutoresizingMaskIntoConstraints = false
         cluesLabel.font = UIFont.systemFont(ofSize: 24)
         cluesLabel.text = "Clues"
-        cluesLabel.textAlignment = .center
+        cluesLabel.textAlignment = .left
         cluesLabel.numberOfLines = 0
         cluesLabel.setContentHuggingPriority(UILayoutPriority(1), for: .vertical)
-        cluesLabel.backgroundColor = .red
+        
         
         answerLabel = UILabel()
         answerLabel.translatesAutoresizingMaskIntoConstraints = false
         answerLabel.font = UIFont.systemFont(ofSize: 24)
         answerLabel.text = "Answer"
-        answerLabel.textAlignment = .center
+        answerLabel.textAlignment = .right
         answerLabel.numberOfLines = 0
         answerLabel.setContentHuggingPriority(UILayoutPriority(1), for: .vertical)
-        answerLabel.backgroundColor = .blue
+        
 
         currentAnswer = UITextField()
         currentAnswer.translatesAutoresizingMaskIntoConstraints = false
@@ -61,18 +67,21 @@ class ViewController: UIViewController {
         
         submit.translatesAutoresizingMaskIntoConstraints = false
         submit.setTitle("SUBMIT", for: .normal)
+        submit.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
         
         clear.translatesAutoresizingMaskIntoConstraints = false
         clear.setTitle("CLEAR", for: .normal)
+        clear.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
         
         buttonsView.translatesAutoresizingMaskIntoConstraints = false
-        buttonsView.backgroundColor = .lightGray
+    
         
         for row in 0..<4 {
             for columm in 0..<5 {
                 let letterButton = UIButton(type: .system)
                 letterButton.titleLabel?.font = UIFont.systemFont(ofSize: 36)
                 letterButton.setTitle("WWW", for: .normal)
+                letterButton.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
                 
                 let frame = CGRect(x: columm * width, y: row * height, width: width, height: height)
                 letterButton.frame = frame
@@ -87,6 +96,57 @@ class ViewController: UIViewController {
         
         addSubviews()
         addContraints()
+        loadLevel()
+    }
+    
+    @objc func letterTapped(_ sender: UIButton) {
+        
+    }
+    
+    @objc func submitTapped(_ sender: UIButton) {
+        
+    }
+    
+    @objc func clearTapped(_ sender: UIButton) {
+        
+    }
+    
+    func loadLevel() {
+        var clueStrings = ""
+        var solutionsStrings = ""
+        var letterBits = [String]()
+        
+        if let levelFileURL = Bundle.main.url(forResource: "level\(level)", withExtension: "txt") {
+            if let levelContents = try? String(contentsOf: levelFileURL) {
+                var lines = levelContents.components(separatedBy: "\n")
+                lines.shuffle()
+                
+                for (index, line) in lines.enumerated() {
+                    let parts = line.components(separatedBy: ": ")
+                    let answer = parts[0]
+                    let clue = parts[1]
+                    
+                    clueStrings += "\(index + 1). \(clue)\n"
+                    
+                    let solutionWord = answer.replacingOccurrences(of: "|", with: "")
+                    solutionsStrings += "\(solutionWord.count) letters\n"
+                    
+                    let bits = answer.components(separatedBy: "|")
+                    letterBits += bits
+                }
+            }
+        }
+        
+        cluesLabel.text = clueStrings.trimmingCharacters(in: .whitespacesAndNewlines)
+        answerLabel.text = solutionsStrings.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        letterButtons.shuffle()
+        
+        if letterButtons.count == letterBits.count {
+            for i in 0..<letterButtons.count {
+                letterButtons[i].setTitle(letterBits[i], for: .normal)
+            }
+        }
     }
     
     func addSubviews() {
@@ -97,7 +157,6 @@ class ViewController: UIViewController {
         view.addSubview(submit)
         view.addSubview(clear)
         view.addSubview(buttonsView)
-//        view.addSubview(letterButtons)
     }
     
     func addContraints() {
@@ -136,7 +195,6 @@ class ViewController: UIViewController {
             
         ])
     }
-
 
 }
 
