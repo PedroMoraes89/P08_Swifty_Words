@@ -15,6 +15,17 @@ class ViewController: UIViewController {
     var scoreLabel: UILabel!
     var letterButtons = [UIButton]()
     
+    var activatedButtons = [UIButton]()
+    var solutions = [String]()
+    
+    var score = 0 {
+        didSet {
+            scoreLabel.text = "Score: \(score)"
+        }
+    }
+    
+    var level = 1
+    
     let submit = UIButton(type: .system)
     let clear = UIButton(type: .system)
     let buttonsView = UIView()
@@ -38,19 +49,19 @@ class ViewController: UIViewController {
         cluesLabel.translatesAutoresizingMaskIntoConstraints = false
         cluesLabel.font = UIFont.systemFont(ofSize: 24)
         cluesLabel.text = "Clues"
-        cluesLabel.textAlignment = .center
+        cluesLabel.textAlignment = .left
         cluesLabel.numberOfLines = 0
         cluesLabel.setContentHuggingPriority(UILayoutPriority(1), for: .vertical)
-        cluesLabel.backgroundColor = .red
+        
         
         answerLabel = UILabel()
         answerLabel.translatesAutoresizingMaskIntoConstraints = false
         answerLabel.font = UIFont.systemFont(ofSize: 24)
         answerLabel.text = "Answer"
-        answerLabel.textAlignment = .center
+        answerLabel.textAlignment = .right
         answerLabel.numberOfLines = 0
         answerLabel.setContentHuggingPriority(UILayoutPriority(1), for: .vertical)
-        answerLabel.backgroundColor = .blue
+        
 
         currentAnswer = UITextField()
         currentAnswer.translatesAutoresizingMaskIntoConstraints = false
@@ -61,18 +72,32 @@ class ViewController: UIViewController {
         
         submit.translatesAutoresizingMaskIntoConstraints = false
         submit.setTitle("SUBMIT", for: .normal)
+        submit.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
+        submit.layer.borderWidth = 1
+        submit.layer.borderColor = UIColor.lightGray.cgColor
+        submit.layer.cornerRadius = 5
         
         clear.translatesAutoresizingMaskIntoConstraints = false
         clear.setTitle("CLEAR", for: .normal)
+        clear.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
+        clear.layer.borderWidth = 1
+        clear.layer.borderColor = UIColor.lightGray.cgColor
+        clear.layer.cornerRadius = 5
         
         buttonsView.translatesAutoresizingMaskIntoConstraints = false
-        buttonsView.backgroundColor = .lightGray
+    
         
         for row in 0..<4 {
             for columm in 0..<5 {
                 let letterButton = UIButton(type: .system)
                 letterButton.titleLabel?.font = UIFont.systemFont(ofSize: 36)
                 letterButton.setTitle("WWW", for: .normal)
+                letterButton.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
+                
+                letterButton.layer.borderWidth = 1
+                letterButton.layer.borderColor = UIColor.lightGray.cgColor
+                letterButton.layer.cornerRadius = 20
+                letterButton.adjustsImageSizeForAccessibilityContentSizeCategory = true
                 
                 let frame = CGRect(x: columm * width, y: row * height, width: width, height: height)
                 letterButton.frame = frame
@@ -87,6 +112,95 @@ class ViewController: UIViewController {
         
         addSubviews()
         addContraints()
+        loadLevel()
+    }
+    
+    @objc func letterTapped(_ sender: UIButton) {
+        guard let buttonTitle = sender.titleLabel?.text else {return}
+        
+        currentAnswer.text = currentAnswer.text?.appending(buttonTitle)
+        activatedButtons.append(sender)
+        sender.isHidden = true
+    }
+    
+    @objc func submitTapped(_ sender: UIButton) {
+        guard let answerText = currentAnswer.text else {return}
+        
+        if let solutionPosition = solutions.firstIndex(of: answerText) {
+            activatedButtons.removeAll()
+            
+            var splitAnswers = answerLabel.text?.components(separatedBy: "\n")
+            splitAnswers?[solutionPosition] = answerText
+            answerLabel.text = splitAnswers?.joined(separator: "\n")
+            
+            currentAnswer.text = ""
+            score += 1
+            
+            if score % 7 == 0 {
+                let ac = UIAlertController(title: "Well done!", message: "Are you ready for the next level?", preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "Let's go!", style: .default, handler: levelUp))
+                present(ac, animated: true)
+            }
+        }
+    }
+    
+    @objc func clearTapped(_ sender: UIButton) {
+        currentAnswer.text = ""
+        
+        for button in activatedButtons {
+            button.isHidden = false
+        }
+        
+        activatedButtons.removeAll()
+    }
+    
+    func levelUp(action: UIAlertAction) {
+        level += 1
+        
+        solutions.removeAll(keepingCapacity: true)
+        loadLevel()
+        
+        for button in letterButtons {
+            button.isHidden = false
+        }
+    }
+    func loadLevel() {
+        var clueStrings = ""
+        var solutionsStrings = ""
+        var letterBits = [String]()
+        
+        if let levelFileURL = Bundle.main.url(forResource: "level\(level)", withExtension: "txt") {
+            if let levelContents = try? String(contentsOf: levelFileURL) {
+                var lines = levelContents.components(separatedBy: "\n")
+                lines.shuffle()
+                
+                for (index, line) in lines.enumerated() {
+                    let parts = line.components(separatedBy: ": ")
+                    let answer = parts[0]
+                    let clue = parts[1]
+                    
+                    clueStrings += "\(index + 1). \(clue)\n"
+                    
+                    let solutionWord = answer.replacingOccurrences(of: "|", with: "")
+                    solutionsStrings += "\(solutionWord.count) letters\n"
+                    solutions.append(solutionWord)
+                    
+                    let bits = answer.components(separatedBy: "|")
+                    letterBits += bits
+                }
+            }
+        }
+        
+        cluesLabel.text = clueStrings.trimmingCharacters(in: .whitespacesAndNewlines)
+        answerLabel.text = solutionsStrings.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        letterButtons.shuffle()
+        
+        if letterButtons.count == letterBits.count {
+            for i in 0..<letterButtons.count {
+                letterButtons[i].setTitle(letterBits[i], for: .normal)
+            }
+        }
     }
     
     func addSubviews() {
@@ -97,7 +211,6 @@ class ViewController: UIViewController {
         view.addSubview(submit)
         view.addSubview(clear)
         view.addSubview(buttonsView)
-//        view.addSubview(letterButtons)
     }
     
     func addContraints() {
@@ -120,13 +233,15 @@ class ViewController: UIViewController {
             currentAnswer.topAnchor.constraint(equalTo: cluesLabel.bottomAnchor, constant: 20),
             currentAnswer.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
             
-            submit.topAnchor.constraint(equalTo: currentAnswer.bottomAnchor),
+            submit.topAnchor.constraint(equalTo: currentAnswer.bottomAnchor, constant: 20),
             submit.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: -100),
             submit.heightAnchor.constraint(equalToConstant: 44),
+            submit.widthAnchor.constraint(equalToConstant: 100),
             
             clear.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 100),
             clear.centerYAnchor.constraint(equalTo: submit.centerYAnchor),
             clear.heightAnchor.constraint(equalToConstant: 44),
+            clear.widthAnchor.constraint(equalToConstant: 100),
             
             buttonsView.widthAnchor.constraint(equalToConstant: 750),
             buttonsView.heightAnchor.constraint(equalToConstant: 320),
@@ -136,7 +251,6 @@ class ViewController: UIViewController {
             
         ])
     }
-
 
 }
 
