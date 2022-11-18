@@ -85,9 +85,6 @@ class ViewController: UIViewController {
         clear.layer.cornerRadius = 5
         
         buttonsView.translatesAutoresizingMaskIntoConstraints = false
-        buttonsView.layer.borderWidth = 1
-        buttonsView.layer.borderColor = UIColor.lightGray.cgColor
-        buttonsView.layer.cornerRadius = 5
     
         
         for row in 0..<4 {
@@ -96,6 +93,11 @@ class ViewController: UIViewController {
                 letterButton.titleLabel?.font = UIFont.systemFont(ofSize: 36)
                 letterButton.setTitle("WWW", for: .normal)
                 letterButton.addTarget(self, action: #selector(letterTapped), for: .touchUpInside)
+                
+                letterButton.layer.borderWidth = 1
+                letterButton.layer.borderColor = UIColor.lightGray.cgColor
+                letterButton.layer.cornerRadius = 20
+                letterButton.adjustsImageSizeForAccessibilityContentSizeCategory = true
                 
                 let frame = CGRect(x: columm * width, y: row * height, width: width, height: height)
                 letterButton.frame = frame
