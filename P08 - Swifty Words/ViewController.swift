@@ -73,12 +73,21 @@ class ViewController: UIViewController {
         submit.translatesAutoresizingMaskIntoConstraints = false
         submit.setTitle("SUBMIT", for: .normal)
         submit.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
+        submit.layer.borderWidth = 1
+        submit.layer.borderColor = UIColor.lightGray.cgColor
+        submit.layer.cornerRadius = 5
         
         clear.translatesAutoresizingMaskIntoConstraints = false
         clear.setTitle("CLEAR", for: .normal)
         clear.addTarget(self, action: #selector(clearTapped), for: .touchUpInside)
+        clear.layer.borderWidth = 1
+        clear.layer.borderColor = UIColor.lightGray.cgColor
+        clear.layer.cornerRadius = 5
         
         buttonsView.translatesAutoresizingMaskIntoConstraints = false
+        buttonsView.layer.borderWidth = 1
+        buttonsView.layer.borderColor = UIColor.lightGray.cgColor
+        buttonsView.layer.cornerRadius = 5
     
         
         for row in 0..<4 {
@@ -222,13 +231,15 @@ class ViewController: UIViewController {
             currentAnswer.topAnchor.constraint(equalTo: cluesLabel.bottomAnchor, constant: 20),
             currentAnswer.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.5),
             
-            submit.topAnchor.constraint(equalTo: currentAnswer.bottomAnchor),
+            submit.topAnchor.constraint(equalTo: currentAnswer.bottomAnchor, constant: 20),
             submit.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: -100),
             submit.heightAnchor.constraint(equalToConstant: 44),
+            submit.widthAnchor.constraint(equalToConstant: 100),
             
             clear.centerXAnchor.constraint(equalTo: view.centerXAnchor, constant: 100),
             clear.centerYAnchor.constraint(equalTo: submit.centerYAnchor),
             clear.heightAnchor.constraint(equalToConstant: 44),
+            clear.widthAnchor.constraint(equalToConstant: 100),
             
             buttonsView.widthAnchor.constraint(equalToConstant: 750),
             buttonsView.heightAnchor.constraint(equalToConstant: 320),
